@@ -1,0 +1,8 @@
+{
+  "listenHost": "0.0.0.0",
+  "listenPort": 7777,
+  "targetHost": "127.0.0.1",
+  "targetPort": 7778,
+  "idleTimeoutMs": 60000,
+  "maxClients": 500
+}

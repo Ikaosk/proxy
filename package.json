@@ -1,0 +1,13 @@
+{
+  "name": "harribel-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UDP-прокси для SA-MP/open.mp сервера Harribel Online — скрывает реальный IP игрового сервера",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

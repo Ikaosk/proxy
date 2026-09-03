@@ -1,0 +1,17 @@
+[Unit]
+Description=Harribel Online SA-MP/open.mp proxy
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/harribel/proxy
+ExecStart=/usr/bin/node index.js
+Restart=on-failure
+RestartSec=5
+User=harribel
+Environment=PROXY_LISTEN_PORT=7777
+Environment=PROXY_TARGET_HOST=127.0.0.1
+Environment=PROXY_TARGET_PORT=7778
+
+[Install]
+WantedBy=multi-user.target
