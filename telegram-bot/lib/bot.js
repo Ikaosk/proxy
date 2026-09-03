@@ -45,9 +45,54 @@ function createBot(config) {
     return user;
   }
 
-  bot.start((ctx) => {
+  async function sendPlanInvoice(ctx, plan) {
+    const isStars = config.currency === 'XTR';
+    const amount = isStars ? plan.priceStars : plan.priceRub * 100; // RUB — в копейках
+
+    await ctx.replyWithInvoice({
+      title: `Подписка: ${plan.title}`,
+      description: `Доступ к прокси/VPN на ${plan.days} дней`,
+      payload: JSON.stringify({ planId: plan.id }),
+      provider_token: isStars ? '' : config.providerToken,
+      currency: config.currency,
+      prices: [{ label: plan.title, amount }],
+    });
+  }
+
+  bot.start(async (ctx) => {
     touchUser(ctx);
-    ctx.reply(
+
+    const payload = ctx.startPayload || '';
+
+    if (payload.startsWith('link_')) {
+      const code = payload.slice('link_'.length);
+      const data = loadStore();
+      const token = store.consumeLinkCode(data, code, ctx.from.id, {
+        username: ctx.from.username,
+        firstName: ctx.from.first_name,
+      });
+      saveStore(data);
+
+      if (token) {
+        await ctx.reply('Приложение подключено ✅ Можете вернуться к нему.', mainMenu);
+      } else {
+        await ctx.reply(
+          'Код для подключения приложения не найден или истёк. Запросите новый код в приложении и попробуйте ещё раз.',
+          mainMenu
+        );
+      }
+      return;
+    }
+
+    if (payload.startsWith('buy_')) {
+      const plan = findPlan(payload.slice('buy_'.length));
+      if (plan) {
+        await sendPlanInvoice(ctx, plan);
+        return;
+      }
+    }
+
+    await ctx.reply(
       'Добро пожаловать! Это бот для управления доступом к прокси/VPN.\n\n' +
         `${BTN_CABINET} — статус подписки и данные для подключения\n` +
         `${BTN_SUBSCRIPTIONS} — история и продление подписок\n` +
@@ -127,18 +172,7 @@ function createBot(config) {
       return;
     }
     await ctx.answerCbQuery();
-
-    const isStars = config.currency === 'XTR';
-    const amount = isStars ? plan.priceStars : plan.priceRub * 100; // RUB — в копейках
-
-    await ctx.replyWithInvoice({
-      title: `Подписка: ${plan.title}`,
-      description: `Доступ к прокси/VPN на ${plan.days} дней`,
-      payload: JSON.stringify({ planId: plan.id }),
-      provider_token: isStars ? '' : config.providerToken,
-      currency: config.currency,
-      prices: [{ label: plan.title, amount }],
-    });
+    await sendPlanInvoice(ctx, plan);
   });
 
   bot.on('pre_checkout_query', (ctx) => ctx.answerPreCheckoutQuery(true));

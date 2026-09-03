@@ -3,12 +3,13 @@
 
 const { loadConfig } = require('./lib/config');
 const createBot = require('./lib/bot');
+const { createApiServer } = require('./lib/apiServer');
 
 function log(...args) {
   console.log(new Date().toISOString(), ...args);
 }
 
-function main() {
+async function main() {
   const config = loadConfig();
   const bot = createBot(config);
 
@@ -17,10 +18,38 @@ function main() {
   log(`  Хранилище: ${config.storePath}`);
   log(`  Прокси: ${config.proxyHost}:${config.proxyHttpPort} (HTTP), ${config.proxyHost}:${config.proxySocksPort} (SOCKS5)`);
 
-  bot.launch().then(() => log('Бот запущен и принимает сообщения (long polling)'));
+  let botUsername = config.botUsername;
 
-  process.once('SIGINT', () => bot.stop('SIGINT'));
-  process.once('SIGTERM', () => bot.stop('SIGTERM'));
+  await bot.launch();
+  log('Бот запущен и принимает сообщения (long polling)');
+
+  if (!botUsername) {
+    try {
+      const me = await bot.telegram.getMe();
+      botUsername = me.username;
+      log(`  Юзернейм бота определён автоматически: @${botUsername}`);
+    } catch (err) {
+      log(`  Не удалось определить юзернейм бота автоматически: ${err.message}. Задайте BOT_USERNAME.`);
+    }
+  }
+
+  const apiServer = createApiServer(config, () => botUsername, log);
+  apiServer.listen(config.apiPort, config.apiHost, () => {
+    log(`API для приложения запущен: ${config.apiHost}:${config.apiPort}`);
+  });
+
+  function shutdown() {
+    log('Остановка...');
+    bot.stop('SIGTERM');
+    apiServer.close();
+    setTimeout(() => process.exit(0), 2000).unref();
+  }
+
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
 }
 
-main();
+main().catch((err) => {
+  console.error('Не удалось запустить бота:', err);
+  process.exit(1);
+});

@@ -29,6 +29,10 @@ function loadConfig() {
       .filter(Boolean)
       .map(Number),
     supportUsername: process.env.SUPPORT_USERNAME || null,
+    apiHost: process.env.API_HOST || '0.0.0.0',
+    apiPort: Number(process.env.API_PORT || 3000),
+    // Если не задан — определяется автоматически через bot.telegram.getMe().
+    botUsername: process.env.BOT_USERNAME || null,
   };
 }
 
