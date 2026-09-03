@@ -9,6 +9,7 @@
 
 const { loadConfig } = require('./lib/config');
 const { createAuthenticator } = require('./lib/auth');
+const { createSubscriptionAuthenticator } = require('./lib/subscriptionAuth');
 const { createHttpProxyServer } = require('./lib/httpProxy');
 const { createSocksServer } = require('./lib/socksProxy');
 
@@ -18,10 +19,23 @@ function log(...args) {
 
 function main() {
   const config = loadConfig();
-  const checkCredentials = createAuthenticator(config.users);
+
+  const checkStaticUser = Object.keys(config.users).length
+    ? createAuthenticator(config.users)
+    : () => false;
+  const checkSubscriptionUser = config.subscriptionsFile
+    ? createSubscriptionAuthenticator(config.subscriptionsFile)
+    : () => false;
+  const checkCredentials = (username, password) =>
+    checkStaticUser(username, password) || checkSubscriptionUser(username, password);
 
   log('Запуск личного прокси (HTTP/HTTPS + SOCKS5)');
-  log(`  Пользователи: ${Object.keys(config.users).join(', ')}`);
+  if (Object.keys(config.users).length) {
+    log(`  Статические пользователи: ${Object.keys(config.users).join(', ')}`);
+  }
+  if (config.subscriptionsFile) {
+    log(`  Пользователи по подписке: ${config.subscriptionsFile}`);
+  }
   log(`  HTTP(S)-прокси: ${config.listenHost}:${config.httpPort}`);
   log(`  SOCKS5-прокси:  ${config.listenHost}:${config.socksPort}`);
 

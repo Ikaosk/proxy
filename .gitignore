@@ -2,6 +2,9 @@
 game-proxy/config.json
 web-proxy/config.json
 
+# Общее хранилище telegram-bot <-> web-proxy (реальные пользователи/пароли)
+telegram-bot/data/
+
 # Логи
 *.log
 
