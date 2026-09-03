@@ -49,36 +49,46 @@ Android-приложение ──HTTP──▶ telegram-bot/lib/apiServer.js �
 Подробности API — в `../telegram-bot/README.md`, раздел «HTTP API для
 приложения».
 
-## Что дальше: VPN-ядро
+## VPN-туннель
 
-Это приложение — **клиент** (личный кабинет, подписки, вход через
-Telegram), а не готовый VPN-туннель. Кнопка «Подключить VPN» на экране
-кабинета уже делает реальную часть Android-интеграции — запрашивает
-системное разрешение через `VpnService.prepare()` и поднимает
-foreground-сервис (`vpn/VpnConnectionService.kt`), — но **не передаёт
-трафик**: TUN-интерфейс не создаётся (`Builder().establish()` не
-вызывается), поэтому интернет пользователя это никак не затрагивает.
+Кнопка «Подключить VPN» поднимает настоящий системный VPN
+(`android.net.VpnService`) и прокачивает через него весь трафик
+устройства в SOCKS5 `web-proxy` — не заглушка.
 
-Причина разделения на два шага: полноценный VPN поверх `VpnService`
-требует разбора IP-пакетов и их проброса в SOCKS5 (`tun2socks`) — это
-обычно нативный компонент на C/Go (пример: open-source
-`outline-go-tun2socks` или `hev-socks5-tunnel`), который встраивается
-через JNI/AAR. Такой сборки нет в этой сессии (нет доступа к Android
-SDK/Google Maven из песочницы), поэтому её нужно добавить и
-протестировать отдельно, уже в Android Studio на реальном
-устройстве/эмуляторе.
+Разбор IP-пакетов и их проброс в SOCKS5 делает
+[hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) (MIT) —
+подключена как git submodule в `app/src/main/jni/hev-socks5-tunnel/` и
+собирается classic ndk-build'ом (`app/src/main/jni/Android.mk`) в
+`libhev-socks5-tunnel.so`; `jni_bridge.c` — тонкий JNI-мост к её C API
+(`hev_socks5_tunnel_main_from_str`/`hev_socks5_tunnel_quit`), а
+`vpn/VpnConnectionService.kt` создаёт TUN-интерфейс через
+`VpnService.Builder`, исключает само приложение из туннеля
+(`addDisallowedApplication`, иначе получилась бы петля маршрутизации
+для соединения с самим SOCKS5-сервером) и запускает библиотеку в
+отдельном потоке.
 
-Когда будете добавлять tun2socks — точка входа обозначена
-`TODO(vpn-core)` в `vpn/VpnConnectionService.kt`: там нужно вызвать
-`Builder().addAddress(...).addRoute(...).establish()`, получить
-`ParcelFileDescriptor`, и запустить поверх него tun2socks с адресом
-`web-proxy` (из `GET /api/me` → `proxy.host`/`proxy.socksPort`) как
-upstream SOCKS5.
+**Известное ограничение:** наш `web-proxy` поддерживает только SOCKS5
+`CONNECT` (TCP), не `UDP ASSOCIATE` — поэтому UDP-режим релея в конфиге
+выставлен в `'tcp'`. DNS и другой UDP-трафик через туннель может
+работать хуже, чем обычный HTTP(S)/TCP — это стоит в первую очередь
+проверить на реальном устройстве. Полноценная поддержка UDP потребует
+доработки SOCKS5-сервера в `../web-proxy/`.
 
 ## Сборка
 
 Проект не собирался и не запускался в этой сессии — здесь нет доступа к
-Android SDK и Google Maven (заблокированы политикой песочницы).
+Android SDK, Google Maven и NDK (заблокированы политикой песочницы), а
+собрать и проверить нативную часть (ndk-build + JNI) можно только там,
+где это всё есть.
+
+**Обязательно** клонируйте с сабмодулями (иначе `hev-socks5-tunnel/`
+будет пустой папкой и сборка упадёт на этапе ndk-build):
+
+```bash
+git clone --recursive https://github.com/Ikaosk/proxy.git
+# если уже склонировали без --recursive:
+git submodule update --init --recursive
+```
 
 ### Вариант 1: CI (без своего компьютера)
 
@@ -95,11 +105,14 @@ Android SDK и Google Maven (заблокированы политикой пе�
 ### Вариант 2: Android Studio
 
 Откройте папку `android-app/` в Android Studio (Iguana/Koala или новее) —
-она сама подтянет Gradle wrapper и зависимости. Либо вручную:
+она сама подтянет Gradle wrapper, NDK (версия закреплена в
+`app/build.gradle.kts` через `ndkVersion`) и зависимости; при первой
+синхронизации может предложить установить NDK — соглашайтесь. Либо вручную:
 
 ```bash
 cd android-app
 gradle wrapper --gradle-version 8.7   # один раз, если нет gradlew
+sdkmanager --install "ndk;27.0.12077973"   # если NDK ещё не установлен
 ./gradlew assembleDebug
 ```
 

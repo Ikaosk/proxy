@@ -6,6 +6,7 @@ plugins {
 android {
     namespace = "com.proxyvpn.app"
     compileSdk = 34
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
         applicationId = "com.proxyvpn.app"
@@ -23,6 +24,18 @@ android {
         // ВРЕМЕННО true — для проверки интерфейса без бэкенда и без входа через
         // Telegram (см. MockApiService.kt). Верните false для реальной работы.
         buildConfigField("boolean", "MOCK_MODE", "true")
+
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
+    }
+
+    // Настоящий VPN-туннель: hev-socks5-tunnel (git submodule, MIT) собирается
+    // classic ndk-build'ом из android-app/app/src/main/jni/Android.mk.
+    externalNativeBuild {
+        ndkBuild {
+            path = file("src/main/jni/Android.mk")
+        }
     }
 
     buildTypes {
