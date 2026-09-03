@@ -1,0 +1,19 @@
+[Unit]
+Description=Personal HTTP(S) + SOCKS5 proxy
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/web-proxy
+ExecStart=/usr/bin/node index.js
+Restart=on-failure
+RestartSec=5
+User=proxy
+# Либо через config.json, либо (для одного пользователя) через переменные:
+# Environment=PROXY_USER=myuser
+# Environment=PROXY_PASSWORD=change-me
+Environment=PROXY_HTTP_PORT=8080
+Environment=PROXY_SOCKS_PORT=1080
+
+[Install]
+WantedBy=multi-user.target

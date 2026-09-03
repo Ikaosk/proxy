@@ -1,0 +1,9 @@
+{
+  "listenHost": "0.0.0.0",
+  "httpPort": 8080,
+  "socksPort": 1080,
+  "idleTimeoutMs": 120000,
+  "users": {
+    "myuser": "change-me-to-a-strong-password"
+  }
+}

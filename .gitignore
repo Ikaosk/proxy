@@ -1,0 +1,8 @@
+# Локальные конфиги с реальными адресами/паролями
+game-proxy/config.json
+web-proxy/config.json
+
+# Логи
+*.log
+
+node_modules/
