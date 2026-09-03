@@ -5,9 +5,9 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
 /**
- * Хранит сессионный токен (см. ApiClient/API `/api/link/*`) в зашифрованном
- * SharedPreferences — токен даёт полный доступ к личному кабинету, поэтому
- * не должен лежать в открытом виде.
+ * Хранит сессионный токен (см. ApiClient и apiServer.js, эндпоинты link-start
+ * и link-status) в зашифрованном SharedPreferences — токен даёт полный доступ
+ * к личному кабинету, поэтому не должен лежать в открытом виде.
  */
 class SessionStore(context: Context) {
     private val masterKey = MasterKey.Builder(context)
