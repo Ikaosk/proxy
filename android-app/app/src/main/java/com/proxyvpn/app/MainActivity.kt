@@ -15,6 +15,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.proxyvpn.app.data.ApiClient
+import com.proxyvpn.app.data.ApiService
+import com.proxyvpn.app.data.MockApiService
 import com.proxyvpn.app.data.SessionStore
 import com.proxyvpn.app.ui.BuyScreen
 import com.proxyvpn.app.ui.CabinetScreen
@@ -27,7 +29,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val sessionStore = SessionStore(applicationContext)
-        val apiClient = ApiClient(baseUrl = BuildConfig.API_BASE_URL)
+        // MOCK_MODE (см. app/build.gradle.kts) — ВРЕМЕННО для проверки интерфейса
+        // без бэкенда и без входа через Telegram: подменяет ApiClient тестовыми
+        // данными и сразу открывает личный кабинет. Верните MOCK_MODE = false,
+        // когда бэкенд/бот будут готовы к реальному тестированию.
+        val apiClient: ApiService =
+            if (BuildConfig.MOCK_MODE) MockApiService() else ApiClient(baseUrl = BuildConfig.API_BASE_URL)
 
         setContent {
             AppTheme {
@@ -40,9 +47,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun AppNavHost(apiClient: ApiClient, sessionStore: SessionStore) {
+private fun AppNavHost(apiClient: ApiService, sessionStore: SessionStore) {
     val navController = rememberNavController()
-    var token by remember { mutableStateOf(sessionStore.getToken()) }
+    // В MOCK_MODE логина нет вообще — сразу открываем кабинет с тестовым токеном.
+    var token by remember { mutableStateOf(if (BuildConfig.MOCK_MODE) "mock-token" else sessionStore.getToken()) }
     val startDestination = if (token != null) "cabinet" else "link"
 
     NavHost(navController = navController, startDestination = startDestination) {

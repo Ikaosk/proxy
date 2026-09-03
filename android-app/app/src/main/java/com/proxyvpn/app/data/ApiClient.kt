@@ -43,12 +43,26 @@ private fun JSONObject.stringOrNull(key: String): String? =
     if (has(key) && !isNull(key)) getString(key) else null
 
 /**
- * Клиент backend API из telegram-bot/lib/apiServer.js. Все публичные методы
- * suspend и сами переключаются на Dispatchers.IO — вызывать можно прямо
- * из корутины на Main (например, из rememberCoroutineScope в Compose),
- * не блокируя UI-поток.
+ * Контракт backend API из telegram-bot/lib/apiServer.js. Экраны принимают
+ * этот интерфейс, а не конкретную реализацию — так MockApiService
+ * (см. MockApiService.kt) может подменить реальные сетевые вызовы
+ * тестовыми данными для проверки интерфейса без бэкенда/Telegram.
  */
-class ApiClient(private val baseUrl: String) {
+interface ApiService {
+    suspend fun linkStart(): LinkStartResult
+    suspend fun linkStatus(code: String): LinkStatusResult
+    suspend fun plans(): List<Plan>
+    suspend fun me(token: String): MeResult
+    suspend fun subscriptions(token: String): List<Subscription>
+    suspend fun logout(token: String)
+}
+
+/**
+ * Реальный клиент backend API. Все методы suspend и сами переключаются на
+ * Dispatchers.IO — вызывать можно прямо из корутины на Main (например, из
+ * rememberCoroutineScope в Compose), не блокируя UI-поток.
+ */
+class ApiClient(private val baseUrl: String) : ApiService {
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
@@ -73,7 +87,7 @@ class ApiClient(private val baseUrl: String) {
         }
     }
 
-    suspend fun linkStart(): LinkStartResult = withContext(Dispatchers.IO) {
+    override suspend fun linkStart(): LinkStartResult = withContext(Dispatchers.IO) {
         val request = Request.Builder().url("$baseUrl/api/link/start").post(emptyBody).build()
         val json = executeObject(request)
         LinkStartResult(
@@ -83,7 +97,7 @@ class ApiClient(private val baseUrl: String) {
         )
     }
 
-    suspend fun linkStatus(code: String): LinkStatusResult = withContext(Dispatchers.IO) {
+    override suspend fun linkStatus(code: String): LinkStatusResult = withContext(Dispatchers.IO) {
         val request = Request.Builder().url("$baseUrl/api/link/status?code=$code").get().build()
         val json = executeObject(request)
         LinkStatusResult(
@@ -93,7 +107,7 @@ class ApiClient(private val baseUrl: String) {
         )
     }
 
-    suspend fun plans(): List<Plan> = withContext(Dispatchers.IO) {
+    override suspend fun plans(): List<Plan> = withContext(Dispatchers.IO) {
         val request = Request.Builder().url("$baseUrl/api/plans").get().build()
         val array = executeArray(request)
         (0 until array.length()).map { i ->
@@ -108,7 +122,7 @@ class ApiClient(private val baseUrl: String) {
         }
     }
 
-    suspend fun me(token: String): MeResult = withContext(Dispatchers.IO) {
+    override suspend fun me(token: String): MeResult = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url("$baseUrl/api/me")
             .header("Authorization", "Bearer $token")
@@ -138,7 +152,7 @@ class ApiClient(private val baseUrl: String) {
         )
     }
 
-    suspend fun subscriptions(token: String): List<Subscription> = withContext(Dispatchers.IO) {
+    override suspend fun subscriptions(token: String): List<Subscription> = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url("$baseUrl/api/subscriptions")
             .header("Authorization", "Bearer $token")
@@ -157,7 +171,7 @@ class ApiClient(private val baseUrl: String) {
         }
     }
 
-    suspend fun logout(token: String): Unit = withContext(Dispatchers.IO) {
+    override suspend fun logout(token: String): Unit = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url("$baseUrl/api/logout")
             .header("Authorization", "Bearer $token")

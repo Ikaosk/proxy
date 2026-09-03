@@ -32,14 +32,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.proxyvpn.app.data.ApiClient
+import com.proxyvpn.app.data.ApiService
 import com.proxyvpn.app.data.MeResult
 import com.proxyvpn.app.vpn.VpnConnectionService
 import kotlinx.coroutines.launch
 
 @Composable
 fun CabinetScreen(
-    apiClient: ApiClient,
+    apiClient: ApiService,
     token: String?,
     onLogout: () -> Unit,
     onNavigateSubscriptions: () -> Unit,

@@ -20,6 +20,9 @@ android {
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000\"")
         // Юзернейм бота без @, для диплинков покупки/входа.
         buildConfigField("String", "BOT_USERNAME", "\"MyVpnBot\"")
+        // ВРЕМЕННО true — для проверки интерфейса без бэкенда и без входа через
+        // Telegram (см. MockApiService.kt). Верните false для реальной работы.
+        buildConfigField("boolean", "MOCK_MODE", "true")
     }
 
     buildTypes {

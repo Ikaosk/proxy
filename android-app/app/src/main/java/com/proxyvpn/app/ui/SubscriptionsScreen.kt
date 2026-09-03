@@ -21,11 +21,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.proxyvpn.app.data.ApiClient
+import com.proxyvpn.app.data.ApiService
 import com.proxyvpn.app.data.Subscription
 
 @Composable
-fun SubscriptionsScreen(apiClient: ApiClient, token: String?, onBack: () -> Unit) {
+fun SubscriptionsScreen(apiClient: ApiService, token: String?, onBack: () -> Unit) {
     var subscriptions by remember { mutableStateOf<List<Subscription>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }

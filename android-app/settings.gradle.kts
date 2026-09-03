@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "vpn-client"
+rootProject.name = "HarrisVPN"
 include(":app")

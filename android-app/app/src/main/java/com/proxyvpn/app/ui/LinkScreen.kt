@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.proxyvpn.app.data.ApiClient
+import com.proxyvpn.app.data.ApiService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
  * Пароль в приложении не нужен — подтверждение происходит в самом Telegram.
  */
 @Composable
-fun LinkScreen(apiClient: ApiClient, onLinked: (String) -> Unit) {
+fun LinkScreen(apiClient: ApiService, onLinked: (String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 

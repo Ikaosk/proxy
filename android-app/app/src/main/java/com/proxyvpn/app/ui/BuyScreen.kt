@@ -28,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.proxyvpn.app.BuildConfig
-import com.proxyvpn.app.data.ApiClient
+import com.proxyvpn.app.data.ApiService
 import com.proxyvpn.app.data.Plan
 
 /**
@@ -38,7 +38,7 @@ import com.proxyvpn.app.data.Plan
  * тянет /api/me заново (см. CabinetScreen).
  */
 @Composable
-fun BuyScreen(apiClient: ApiClient, onBack: () -> Unit) {
+fun BuyScreen(apiClient: ApiService, onBack: () -> Unit) {
     val context = LocalContext.current
     var plans by remember { mutableStateOf<List<Plan>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
