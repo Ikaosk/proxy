@@ -7,6 +7,8 @@
  * мессенджеры, консольные утилиты и т.п.
  */
 
+require('dotenv').config(); // подхватывает .env, если он есть; переменные окружения имеют приоритет
+
 const { loadConfig } = require('./lib/config');
 const { createAuthenticator } = require('./lib/auth');
 const { createSubscriptionAuthenticator } = require('./lib/subscriptionAuth');

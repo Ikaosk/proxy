@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 
+require('dotenv').config(); // подхватывает .env, если он есть; переменные окружения имеют приоритет
+
 const { loadConfig } = require('./lib/config');
 const createBot = require('./lib/bot');
 const { createApiServer } = require('./lib/apiServer');

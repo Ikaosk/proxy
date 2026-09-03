@@ -63,9 +63,24 @@ upstream SOCKS5.
 ## Сборка
 
 Проект не собирался и не запускался в этой сессии — здесь нет доступа к
-Android SDK и Google Maven (заблокированы политикой песочницы). Откройте
-папку в Android Studio (Iguana/Koala или новее) — она сама подтянет
-Gradle wrapper и зависимости. Либо вручную:
+Android SDK и Google Maven (заблокированы политикой песочницы).
+
+### Вариант 1: CI (без своего компьютера)
+
+`.github/workflows/android-apk.yml` собирает debug-APK на GitHub Actions
+(у раннера есть обычный интернет) при каждом пуше в `android-app/**`, либо
+вручную — вкладка **Actions → Android APK → Run workflow**. Готовый
+`app-debug.apk` появляется в **Artifacts** внизу страницы запуска (нужно
+быть залогиненным в GitHub, artifacts приватны). ⚠️ Собирается со
+значениями `API_BASE_URL`/`BOT_USERNAME` по умолчанию из
+`app/build.gradle.kts` (`http://10.0.2.2:3000`, `MyVpnBot`) — поправьте их
+перед пушем под свой сервер и бота, иначе экраны кабинета/покупки не
+подключатся к вашему backend.
+
+### Вариант 2: Android Studio
+
+Откройте папку `android-app/` в Android Studio (Iguana/Koala или новее) —
+она сама подтянет Gradle wrapper и зависимости. Либо вручную:
 
 ```bash
 cd android-app
